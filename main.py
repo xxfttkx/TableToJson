@@ -1,3 +1,4 @@
+from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -27,8 +28,20 @@ def table_to_json(url):
         cells = row.find_all(['td', 'th'])
         if len(cells) != len(headers):
             continue
-        item = {headers[i]: cells[i].get_text(strip=True) for i in range(len(headers))}
+        item = {}
+        for i in range(len(headers)):
+            cell = cells[i]
+            if headers[i] == "画像":
+                img_tag = cell.find("img")
+                if img_tag:
+                    image_url = img_tag.get("data-src") or img_tag.get("src")
+                    item[headers[i]] = urljoin(url, image_url)
+                else:
+                    item[headers[i]] = ""
+            else:
+                item[headers[i]] = cell.get_text(strip=True)
         data.append(item)
+
 
     return data
 
